@@ -25,25 +25,46 @@ PanelScreen::~PanelScreen() {}
 
 void PanelScreen::on_refresh() {}
 
-void PanelScreen::on_enter() {}
+void PanelScreen::on_enter() { lastStart = -1; lastCurrent = -1;}
 
-void PanelScreen::refresh_menu(bool clear)
+void PanelScreen::refresh_menu(bool clear) //clear is unused for now
 {
-    if (clear) THEPANEL->lcd->clear();
-    for (uint16_t i = THEPANEL->menu_start_line; i < THEPANEL->menu_start_line + min( THEPANEL->menu_rows, THEPANEL->panel_lines ); i++ ) {
-        THEPANEL->lcd->setCursor(2, i - THEPANEL->menu_start_line );
-        this->display_menu_line(i);
+    if (clear) {
+        lastStart = -1;
+        lastCurrent = -1;
     }
-    THEPANEL->lcd->setCursor(0, THEPANEL->menu_current_line - THEPANEL->menu_start_line );
-    THEPANEL->lcd->printf(">");
+    if (lastStart != THEPANEL->menu_start_line) { 
+        THEPANEL->lcd->clear();
+    
+        for (uint16_t i = THEPANEL->menu_start_line; i < THEPANEL->menu_start_line + min( THEPANEL->menu_rows, THEPANEL->panel_lines ); i++ ) {
+            THEPANEL->lcd->setCursor(2, i - THEPANEL->menu_start_line );
+            this->display_menu_line(i);
+        }
+        THEPANEL->lcd->setCursor(0, THEPANEL->menu_current_line - THEPANEL->menu_start_line );
+        THEPANEL->lcd->printf(">");
+    } else {
+        THEPANEL->lcd->setCursor(0, lastCurrent - THEPANEL->menu_start_line );
+        THEPANEL->lcd->printf(" ");
+        THEPANEL->lcd->setCursor(0, THEPANEL->menu_current_line - THEPANEL->menu_start_line );
+        THEPANEL->lcd->printf(">");
+    }
+    lastCurrent = THEPANEL->menu_current_line;
+    lastStart = THEPANEL->menu_start_line;
 }
 
 void PanelScreen::refresh_screen(bool clear)
 {
-    if (clear) THEPANEL->lcd->clear();
+    if (clear) {
+        THEPANEL->lcd->clear();
+        lastStart = -1;
+        lastCurrent = -1;
+    }
+    
     for (uint16_t i = THEPANEL->menu_start_line; i < THEPANEL->menu_start_line + min( THEPANEL->menu_rows, THEPANEL->panel_lines ); i++ ) {
         THEPANEL->lcd->setCursor(0, i - THEPANEL->menu_start_line );
         this->display_menu_line(i);
+        lastStart = -1;
+        lastCurrent = -1;
     }
 }
 

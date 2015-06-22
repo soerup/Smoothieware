@@ -101,13 +101,13 @@ void MainMenuScreen::on_enter()
 {
     THEPANEL->enter_menu_mode();
     THEPANEL->setup_menu(7);
-    this->refresh_menu();
+    this->refresh_menu(true);
 }
 
 void MainMenuScreen::on_refresh()
 {
     if ( THEPANEL->menu_change() ) {
-        this->refresh_menu();
+        this->refresh_menu(false);
     }
     if ( THEPANEL->click() ) {
         this->clicked_menu_entry(THEPANEL->get_menu_current_line());

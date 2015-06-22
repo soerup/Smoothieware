@@ -38,13 +38,13 @@ void PrepareScreen::on_enter()
     THEPANEL->enter_menu_mode();
     // if no heaters or extruder then don't show related menu items
     THEPANEL->setup_menu((this->extruder_screen != nullptr) ? 9 : 5);
-    this->refresh_menu();
+    this->refresh_menu(true);
 }
 
 void PrepareScreen::on_refresh()
 {
     if ( THEPANEL->menu_change() ) {
-        this->refresh_menu();
+        this->refresh_menu(false);
     }
     if ( THEPANEL->click() ) {
         this->clicked_menu_entry(THEPANEL->get_menu_current_line());

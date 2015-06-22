@@ -27,7 +27,7 @@ public:
     // if you completely rewrite the screen do not clear it, this avoids flicker
     void refresh_screen(bool clear);
     void refresh_menu(bool clear);
-    void refresh_menu(void) { refresh_menu(true); };
+    //void refresh_menu(void) { refresh_menu(true); };
     virtual void display_menu_line(uint16_t line) = 0;
     // default idle timeout for a screen, each screen can override this
     virtual int idle_timeout_secs(){ return 10; }
@@ -39,6 +39,10 @@ protected:
     void send_command(const char *gcstr);
     static std::deque<std::string> command_queue;
     PanelScreen *parent;
+
+private:
+    int lastStart;
+    int lastCurrent;
 };
 
 #endif

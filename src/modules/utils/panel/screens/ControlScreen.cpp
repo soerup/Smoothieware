@@ -38,7 +38,7 @@ void ControlScreen::on_enter()
     THEPANEL->enter_menu_mode();
     THEPANEL->setup_menu(4);
     get_current_pos(this->pos);
-    this->refresh_menu();
+    this->refresh_menu(true);
     this->pos_changed = false;
 }
 
@@ -46,14 +46,14 @@ void ControlScreen::on_enter()
 void ControlScreen::on_refresh()
 {
     if ( THEPANEL->menu_change() ) {
-        this->refresh_menu();
+        this->refresh_menu(false);
     }
 
     if (this->control_mode == AXIS_CONTROL_MODE) {
 
         if ( THEPANEL->click() ) {
             this->enter_menu_control();
-            this->refresh_menu();
+            this->refresh_menu(true); // ??
 
         } else if (THEPANEL->control_value_change()) {
             this->pos[this->controlled_axis - 'X'] = THEPANEL->get_control_value();

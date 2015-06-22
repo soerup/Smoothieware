@@ -71,6 +71,10 @@ UniversalAdapter::UniversalAdapter()
     int spi_frequency = THEKERNEL->config->value(panel_checksum, spi_frequency_checksum)->by_default(500000)->as_int();
     this->spi->frequency(spi_frequency);
     ledBits = 0;
+
+    encoderValue = 0;
+    buttonsPressed = 0;
+    readState = STATE_UNSET;
 }
 
 UniversalAdapter::~UniversalAdapter()
@@ -81,20 +85,35 @@ UniversalAdapter::~UniversalAdapter()
     delete this->spi;
 }
 
-// void UniversalAdapter::on_refresh(bool now)
-// {
-//     SPIFrame sf(this); // asserts cs on entry and deasserts on exit
-//     uint8_t b = sendReadCmd(GET_STATUS|2);
-//     uint8_t cmd = SET_LEDS | 1;
-//     writeSPI(cmd);
-//     writeSPI(b);
-// }
-
-uint8_t UniversalAdapter::writeSPI(uint8_t b)
+void UniversalAdapter::writeSPI(uint8_t b)
 {
     uint8_t r = this->spi->write(b);
     wait_us(40); // need some delay here for arduino to catch up
-    return r;
+ 
+    // Handle feedback - based on what we are waiting for
+    switch (readState) {
+        case STATE_UNSET : {
+            switch(r) {
+                case 66 /*B*/ : readState = STATE_BUTTON; break;
+                case 69 /*E*/: readState = STATE_ENCODER; break;
+                default : readState = STATE_UNSET;
+            }
+            break;
+        }
+        case STATE_BUTTON : {
+            buttonsPressed = r;
+            readState = STATE_UNSET;
+            break;
+        }
+        case STATE_ENCODER : {
+            // this is actually a signed number +/-127, so convert to int
+            int d = r < 128 ? r : -(256 - r);
+            encoderValue += d;
+            readState = STATE_UNSET;
+            break;
+        }
+    }
+    return;
 }
 
 void UniversalAdapter::wait_until_ready()
@@ -106,28 +125,22 @@ void UniversalAdapter::wait_until_ready()
     }
 }
 
-uint8_t UniversalAdapter::sendReadCmd(uint8_t cmd)
-{
-    writeSPI(cmd);
-    return writeSPI(0);
-}
-
 uint8_t UniversalAdapter::readButtons()
 {
+    uint8_t b = buttonsPressed;
+
     SPIFrame sf(this); // asserts cs on entry and deasserts on exit
-    uint8_t b = sendReadCmd(READ_BUTTONS);
+    writeSPI(READ_BUTTONS); writeSPI(0);writeSPI(0);writeSPI(0);writeSPI(0);
     return b & ~BUTTON_PAUSE; // clear pause for now in case of noise
 }
 
 int UniversalAdapter::readEncoderDelta()
 {
     SPIFrame sf(this); // asserts cs on entry and deasserts on exit
-    uint8_t e = sendReadCmd(READ_ENCODER);
-    //if(e != 0) THEKERNEL->streams->printf("e: %02X\n", e);
-
-    // this is actually a signed number +/-127, so convert to int
-    int d = e < 128 ? e : -(256 - e);
-    return d;
+    writeSPI(READ_ENCODER); writeSPI(0);writeSPI(0);writeSPI(0);writeSPI(0);
+    int8_t e = encoderValue;
+    encoderValue = 0;
+    return e;
 }
 
 // cycle the buzzer pin at a certain frequency (hz) for a certain duration (ms)
@@ -192,10 +205,11 @@ void UniversalAdapter::setCursor(uint8_t col, uint8_t row)
 {
     SPIFrame sf(this); // asserts cs on entry and deasserts on exit
     wait_until_ready();
-    uint8_t cmd = SET_CURSOR | 1;
-    uint8_t rc = (row << 5) | (col & 0x1F);
+    uint8_t cmd = SET_CURSOR | 2;
+    //uint8_t rc = (row << 5) | (col & 0x1F);
     writeSPI(cmd);
-    writeSPI(rc);
+    writeSPI(row);
+    writeSPI(col);
 }
 
 void UniversalAdapter::home()

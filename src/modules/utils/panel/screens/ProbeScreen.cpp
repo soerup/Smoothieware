@@ -39,13 +39,13 @@ void ProbeScreen::on_enter()
 {
     THEPANEL->enter_menu_mode();
     THEPANEL->setup_menu(3);
-    this->refresh_menu();
+    this->refresh_menu(true);
 }
 
 void ProbeScreen::on_refresh()
 {
     if ( THEPANEL->menu_change() ) {
-        this->refresh_menu();
+        this->refresh_menu(false);
     }
     if ( THEPANEL->click() ) {
         this->clicked_menu_entry(THEPANEL->get_menu_current_line());

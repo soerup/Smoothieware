@@ -45,7 +45,7 @@ void FileScreen::on_exit()
 void FileScreen::on_refresh()
 {
     if ( THEPANEL->menu_change() ) {
-        this->refresh_menu();
+        this->refresh_menu(true);
     }
     if ( THEPANEL->click() ) {
         this->clicked_line(THEPANEL->get_menu_current_line());
@@ -66,7 +66,7 @@ void FileScreen::enter_folder(const char *folder)
     THEPANEL->enter_menu_mode();
 
     // Display menu
-    this->refresh_menu();
+    this->refresh_menu(false);
 }
 
 // Called by the panel when refreshing the menu, display .. then all files in the current dir

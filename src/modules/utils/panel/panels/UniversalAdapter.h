@@ -11,6 +11,8 @@
 #include "LcdBase.h"
 #include "mbed.h"
 
+enum READSTATE { STATE_UNSET, STATE_BUTTON, STATE_ENCODER };
+
 class Pin;
 
 class UniversalAdapter : public LcdBase {
@@ -32,9 +34,11 @@ class UniversalAdapter : public LcdBase {
         int readEncoderDelta();
 
         // this is the number of clicks per detent
-        int getEncoderResolution() { return 2; }
+        int getEncoderResolution() { return 4; }
 
         void buzz(long,uint16_t);
+        // override this if the panel can handle more or less screen lines
+        virtual uint16_t get_screen_lines() { return 12; } 
 
     private:
         // this is a C++ way to do something on entry of a class and something else on exit of scope
@@ -46,13 +50,21 @@ class UniversalAdapter : public LcdBase {
             UniversalAdapter *u;
         };
 
-        uint8_t writeSPI(uint8_t b);
+        void writeSPI(uint8_t b);
         void wait_until_ready();
         uint8_t sendReadCmd(uint8_t cmd);
         uint16_t ledBits;
         mbed::SPI* spi;
         Pin *cs_pin;
         Pin *busy_pin;
+
+        // State of buttons and encoder - we get data back from panel in unstructed form. 
+        // B <value> = button pressed value
+        // E <value> = encoder value to add to cached value waiting for next read
+        // Panel will queue these on each change
+        uint8_t buttonsPressed;
+        int8_t encoderValue;
+        READSTATE readState;
 };
 
 

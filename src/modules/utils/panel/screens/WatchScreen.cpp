@@ -77,7 +77,7 @@ void WatchScreen::on_enter()
     get_current_pos(this->pos);
     get_sd_play_info();
     this->current_speed = lround(get_current_speed());
-    this->refresh_screen(false);
+    this->refresh_screen(true);
     THEPANEL->enter_control_mode(1, 0.5);
     THEPANEL->set_control_value(this->current_speed);
 }
